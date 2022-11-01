@@ -23,8 +23,9 @@ export default function App(props: AppProps) {
   const { locale, messages } = useFormattedMessages();
 
   const version = [
-    process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || "",
-    process.env.NEXT_PUBLIC_SENTRY_RELEASE || "",
+    process.env.NEXT_PUBLIC_SENTRY_ENVIRONMENT || "(unknown_env)",
+    process.env.NEXT_PUBLIC_GIT_BRANCH || "(unknown_branch)",
+    process.env.NEXT_PUBLIC_SENTRY_RELEASE || "(unknown_release)",
   ].join("-");
 
   useEffect(() => {
@@ -35,8 +36,7 @@ export default function App(props: AppProps) {
     <>
       <Head>
         <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-        {/* eslint-disable-next-line react/no-unknown-property */}
-        <style jsx global>
+        <style>
           {`
             html,
             body {
@@ -49,9 +49,9 @@ export default function App(props: AppProps) {
               box-sizing: border-box;
             }
             body {
-              font-family: "Roboto", "Helvetica", "Arial", sans-serif;
               font-size: 1rem;
               margin: 0;
+              background: transparent !important;
             }
           `}
         </style>
@@ -74,6 +74,9 @@ export default function App(props: AppProps) {
                     fontSize: "0.8em",
                     textAlign: "center",
                     color: "#777",
+                    transform: "translateY(-100%)",
+                    height: "1.7rem",
+                    marginTop: "-1.7rem",
                   }}
                 >
                   <small>{version}</small>

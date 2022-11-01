@@ -1,11 +1,11 @@
-import { CountryCode } from "@/checkout-storefront/graphql";
+import { CountryCode, LanguageCodeEnum } from "@/checkout-storefront/graphql";
 import { ApiErrors } from "@/checkout-storefront/hooks";
 import { FormDataBase } from "@/checkout-storefront/lib/globalTypes";
-import { Locale } from "@/checkout-storefront/lib/regions";
-import { omit, reduce } from "lodash-es";
+import { DEFAULT_LOCALE, Locale } from "@/checkout-storefront/lib/regions";
+import { reduce, snakeCase } from "lodash-es";
 import queryString from "query-string";
 import { ChangeEvent, ReactEventHandler } from "react";
-import { OperationResult } from "urql";
+import { AnyVariables, OperationResult } from "urql";
 
 export const getById =
   <T extends { id: string }>(idToCompare: string | undefined) =>
@@ -30,13 +30,18 @@ export type QueryParams = Partial<
   >
 > & { countryCode: CountryCode; locale: Locale };
 
-const getRawQueryParams = () => queryString.parse(location.search);
+export const getRawQueryParams = () => queryString.parse(location.search);
 
 export const getQueryParams = (): QueryParams => {
   const vars = getRawQueryParams();
+
+  if (typeof vars.locale !== "string") {
+    replaceUrl({ query: { ...vars, locale: DEFAULT_LOCALE } });
+  }
+
   return {
     ...vars,
-    locale: vars.locale as Locale,
+    locale: vars.locale || (DEFAULT_LOCALE as Locale),
     checkoutId: vars.checkout as string | undefined,
     orderId: vars.order as string | undefined,
     passwordResetToken: vars.token as string | undefined,
@@ -48,12 +53,14 @@ export const setLanguageInUrl = (locale: Locale) =>
   replaceUrl({ query: { ...getRawQueryParams(), locale } });
 
 export const clearUrlAfterPasswordReset = (): void => {
-  const query = omit(getRawQueryParams(), ["token", "email"]);
-  replaceUrl({ query });
+  replaceUrl({ query: { ...getRawQueryParams(), token: undefined, email: undefined } });
 };
 
+export const localeToLanguageCode = (locale: Locale) =>
+  snakeCase(locale).toUpperCase() as LanguageCodeEnum;
+
 export const replaceUrl = ({
-  url = window.location.origin,
+  url = window.location.toString(),
   query,
 }: {
   url?: string;
@@ -71,6 +78,8 @@ export const replaceUrl = ({
     "",
     newUrl
   );
+
+  return newUrl;
 };
 
 export const getCurrentHref = () => location.href;
@@ -81,12 +90,8 @@ export const isOrderConfirmationPage = () => {
 };
 
 export const getParsedLocaleData = (
-  locale?: Locale
+  locale: Locale
 ): { locale: Locale; countryCode: CountryCode } => {
-  if (typeof locale !== "string") {
-    throw new Error("Invalid url");
-  }
-
   const [, countryCode] = locale?.split("-");
 
   return { countryCode: countryCode as CountryCode, locale };
@@ -106,7 +111,7 @@ export const extractCheckoutIdFromUrl = (): string => {
   return checkoutId;
 };
 
-export const extractMutationErrors = <TData extends FormDataBase, TVars = any>(
+export const extractMutationErrors = <TData extends FormDataBase, TVars extends AnyVariables = any>(
   result: OperationResult<TData, TVars> | any // any to cover apollo client
   // mutations, to be removed once we remove apollo client from sdk
 ): [boolean, ApiErrors<TData>] => {

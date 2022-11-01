@@ -53,7 +53,7 @@ export const AddressForm: FC<PropsWithChildren<AddressFormProps>> = ({
     () =>
       sortBy(
         countries.map((code) => ({
-          label: formatMessage(countriesMessages[code as keyof typeof countriesMessages]),
+          label: formatMessage(countriesMessages[code]),
           value: code,
           disabled: !isAvailable({ country: { code } }),
         })),
@@ -82,7 +82,7 @@ export const AddressForm: FC<PropsWithChildren<AddressFormProps>> = ({
       setValue(field as Path<AddressFormData>, emptyFormData[field as Path<AddressFormData>]);
     });
 
-    if (isDirty) {
+    if (removedFields.length && isDirty) {
       void trigger();
     }
   }, [allowedFields, requiredFields, setValue, trigger, isDirty]);
@@ -90,9 +90,9 @@ export const AddressForm: FC<PropsWithChildren<AddressFormProps>> = ({
   return (
     <form>
       <div className="flex flex-row justify-between items-baseline">
-        <Title>{title}</Title>
+        <Title className="flex-1">{title}</Title>
         <Select
-          classNames={{ container: "inline-block !w-auto" }}
+          classNames={{ container: "flex-1 inline-block !w-auto" }}
           options={countryOptions}
           {...getInputProps("countryCode")}
           autoComplete={autocompleteTags.countryCode}
