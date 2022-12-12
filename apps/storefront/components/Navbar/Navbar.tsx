@@ -15,6 +15,7 @@ import NavIconButton from "./NavIconButton";
 import Stamp from "./Stamp";
 import UserMenu from "./UserMenu";
 import { useRegions } from "@/components/RegionsProvider";
+import { invariant } from "@apollo/client/utilities/globals";
 
 export function Navbar() {
   const paths = usePaths();
@@ -23,11 +24,26 @@ export function Navbar() {
   const [isBurgerOpen, setBurgerOpen] = useState(false);
   const { authenticated } = useAuthState();
   const { checkout } = useCheckout();
-  const { currentLocale } = useRegions();
+  const { currentLocale, currentChannel } = useRegions();
 
-  const externalCheckoutUrl = checkout
-    ? `/checkout/?checkout=${checkout.id}&locale=${currentLocale}`
-    : "#";
+  const saleorApiUrl = process.env.NEXT_PUBLIC_API_URI;
+  invariant(saleorApiUrl, "Missing NEXT_PUBLIC_API_URI");
+  const domain = new URL(saleorApiUrl).hostname;
+
+  const checkoutParams = checkout
+    ? new URLSearchParams({
+        checkout: checkout.id,
+        locale: currentLocale,
+        channel: currentChannel.slug,
+        saleorApiUrl,
+        // @todo remove `domain`
+        // https://github.com/saleor/saleor-dashboard/issues/2387
+        // https://github.com/saleor/saleor-app-sdk/issues/87
+        domain,
+      })
+    : new URLSearchParams();
+
+  const externalCheckoutUrl = checkout ? `/checkout/?${checkoutParams.toString()}` : "#";
 
   useEffect(() => {
     // Close side menu after changing the page
@@ -69,9 +85,9 @@ export function Navbar() {
             ) : (
               <UserMenu />
             )}
-            <Link href={externalCheckoutUrl} className="ml-2 hidden xs:flex" data-testid="cartIcon">
+            <a href={externalCheckoutUrl} className="ml-2 hidden xs:flex" data-testid="cartIcon">
               <NavIconButton isButton={false} icon="bag" aria-hidden="true" counter={counter} />
-            </Link>
+            </a>
             <Link href={paths.search.$url()} passHref legacyBehavior>
               <a href="pass" className="hidden lg:flex ml-2" data-testid="searchIcon">
                 <NavIconButton isButton={false} icon="spyglass" />

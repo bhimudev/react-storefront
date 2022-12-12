@@ -16,12 +16,12 @@ function useAlerts(scope: CheckoutScope): {
 
 function useAlerts(): {
   showErrors: (errors: ApiErrors<any>, scope: CheckoutScope) => void;
-  showCustomErrors: (errors: CustomError[], scope: CheckoutScope) => void;
+  showCustomErrors: (errors: CustomError[], scope?: CheckoutScope) => void;
 };
 
 function useAlerts(globalScope?: any): any {
   const formatMessage = useFormattedMessages();
-  const getParsedApiErrors = useGetParsedApiErrors();
+  const { getParsedApiErrors } = useGetParsedApiErrors<any>();
 
   const getMessageKey = ({ scope, field, code }: AlertErrorData, { error } = { error: false }) => {
     const keyBase = `${scope}-${field}-${code}`;
@@ -80,7 +80,9 @@ function useAlerts(globalScope?: any): any {
 
   const showErrors = useCallback(
     (errors: ApiErrors<any>, scope: CheckoutScope = globalScope) =>
-      getParsedApiErrors(errors).forEach((error) => showDefaultAlert({ ...error, scope })),
+      getParsedApiErrors(errors).forEach((error) =>
+        showDefaultAlert({ ...error, scope } as AlertErrorData)
+      ),
     [getParsedApiErrors, showDefaultAlert, globalScope]
   );
 

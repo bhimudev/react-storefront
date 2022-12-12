@@ -1,7 +1,7 @@
 import { AddressField } from "@/checkout-storefront/lib/globalTypes";
 
 export const autocompleteTags: Record<AddressField, string> = {
-  firstName: "name",
+  firstName: "given-name",
   lastName: "family-name",
   companyName: "organization",
   phone: "tel",
@@ -12,4 +12,8 @@ export const autocompleteTags: Record<AddressField, string> = {
   postalCode: "postal-code",
   cityArea: "",
   countryArea: "address-level1",
+};
+
+export const typeTags: Partial<Record<AddressField, string>> = {
+  phone: "tel",
 };
